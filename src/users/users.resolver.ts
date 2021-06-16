@@ -1,13 +1,14 @@
 import { Args, Mutation, Query } from '@nestjs/graphql';
 import { Resolver } from '@nestjs/graphql';
-import {
-  createAccountInput,
-  createAccountOutput,
-} from './dto/createAccount.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
+import {
+  CreateAccountInput,
+  CreateAccountOutput,
+} from './dtos/createAccount.dto';
+import { LoginInput, LoginOutput } from './dtos/login.dto';
 
-@Resolver((of) => User)
+@Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
@@ -16,21 +17,26 @@ export class UsersResolver {
     return true;
   }
 
-  @Mutation(() => createAccountOutput)
+  @Mutation(() => CreateAccountOutput)
   async createAccount(
-    @Args('input') createAccountInput: createAccountInput,
-  ): Promise<createAccountOutput> {
-    try {
-      await this.usersService.createAccount(createAccountInput);
-      return {
-        ok: true,
-      };
-    } catch (err) {
-      console.log(err);
-      return {
-        ok: false,
-        error: 'Cannot create user',
-      };
-    }
+    @Args('input') createAccountInput: CreateAccountInput,
+  ): Promise<CreateAccountOutput> {
+    const { ok, error } = await this.usersService.createAccount(
+      createAccountInput,
+    );
+    return {
+      ok,
+      error,
+    };
+  }
+
+  @Mutation(() => LoginOutput)
+  async login(@Args('input') loginInput: LoginInput): Promise<LoginOutput> {
+    const { ok, error, token } = await this.usersService.login(loginInput);
+    return {
+      ok,
+      error,
+      token,
+    };
   }
 }
