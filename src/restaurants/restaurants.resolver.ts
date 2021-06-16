@@ -4,7 +4,7 @@ import { updateRestaurantDto } from './dto/update-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
 import { RestaurantsService } from './restaurants.service';
 
-@Resolver((of) => Restaurant)
+@Resolver(() => Restaurant)
 export class RestaurantsResolver {
   constructor(private readonly restaurantService: RestaurantsService) {}
 
