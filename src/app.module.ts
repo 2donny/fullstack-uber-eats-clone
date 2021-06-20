@@ -14,11 +14,14 @@ import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
 import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
+import { Verification } from './users/entities/verification.entity';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      cache: true,
       validationSchema: Joi.object({
         NODE_ENV: Joi.string()
           .valid('dev', 'prod', 'test')
@@ -41,23 +44,23 @@ import { AuthModule } from './auth/auth.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User],
+      entities: [User, Verification],
       synchronize: process.env.NODE_ENV !== 'prod',
       logging: process.env.NODE_ENV !== 'prod',
     }),
     GraphQLModule.forRoot({
       autoSchemaFile: true,
-      context: ({ req }) => {
-        return {
-          user: req['user'],
-        };
-      },
+      context: ({ req }) => ({
+        user: req['user'],
+      }),
     }),
     JwtModule.foorRoot({ privateKey: process.env.JWT_KEY }),
     UsersModule,
     CommonModule,
     AuthModule,
+    MailModule,
   ],
+
   controllers: [],
   providers: [],
 })
