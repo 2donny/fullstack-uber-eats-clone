@@ -8,9 +8,11 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { JwtService } from 'src/jwt/jwt.service';
-import { EditProfileInput } from './dtos/edit-profile.dto';
+import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 import { VerifyEmailOutput } from './dtos/verify-email.dto';
+import { UserProfileOutput } from './dtos/user-profile.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +22,7 @@ export class UsersService {
     @InjectRepository(Verification)
     private readonly verificationService: Repository<Verification>,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async createAccount(
@@ -82,39 +85,80 @@ export class UsersService {
     }
   }
 
-  async findById(id: number): Promise<User> {
-    return this.users.findOne({ id });
+  async findById(id: number): Promise<UserProfileOutput> {
+    try {
+      const user = await this.users.findOne({ id });
+      if (!user) {
+        return {
+          ok: false,
+          error: '해당 유저가 존재하지 않습니다.',
+        };
+      } else {
+        return {
+          ok: true,
+          user,
+        };
+      }
+    } catch {
+      return {
+        ok: false,
+        error: '해당 유저를 찾을 수 없습니다.',
+      };
+    }
   }
 
   async editProfile(
     userId: number,
     { email, password, role }: EditProfileInput,
-  ) {
-    const user = await this.users.findOne({ id: userId });
-    if (email) {
-      user.email = email;
-      user.verified = false;
-    }
-    if (password) user.password = password;
-    if (role) user.role = role;
-    return this.users.save(user);
-  }
-
-  async verifyEmail(code: string): Promise<VerifyEmailOutput> {
-    const verification = await this.verificationService.findOne(
-      { code },
-      { relations: ['user'] },
-    );
-    if (verification?.user) {
-      verification.user.verified = true;
-      this.users.save(verification.user);
+  ): Promise<EditProfileOutput> {
+    try {
+      const user = await this.users.findOne({ id: userId });
+      console.log(user);
+      if (email) {
+        user.email = email;
+        user.verified = false;
+      }
+      if (password) user.password = password;
+      if (role) user.role = role;
+      await this.users.save(user);
       return {
         ok: true,
       };
-    } else {
+    } catch {
       return {
         ok: false,
-        error: '유효하지 않는 코드입니다.',
+        error: '프로필 편집 실패했습니다.',
+      };
+    }
+  }
+
+  async verifyEmail(code: string): Promise<VerifyEmailOutput> {
+    try {
+      const verification = await this.verificationService.findOne(
+        { code },
+        { relations: ['user'] },
+      );
+      if (verification?.user) {
+        verification.user.verified = true;
+        await this.users.save(verification.user);
+        // await this.verificationService.delete(verification.id);
+        await this.mailService.sendVerificationEmail(
+          verification.user.email,
+          code,
+        );
+        return {
+          ok: true,
+        };
+      } else {
+        return {
+          ok: false,
+          error: '이미 검증한 이메일입니다.',
+        };
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        error: '검증할 수 없습니다.',
       };
     }
   }
