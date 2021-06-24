@@ -113,10 +113,16 @@ export class UsersService {
   ): Promise<EditProfileOutput> {
     try {
       const user = await this.users.findOne({ id: userId });
-      console.log(user);
       if (email) {
         user.email = email;
         user.verified = false;
+        const verification = await this.verificationService.save(
+          this.verificationService.create({ user }),
+        );
+        await this.mailService.sendVerificationEmail(
+          user.email,
+          verification.code,
+        );
       }
       if (password) user.password = password;
       if (role) user.role = role;
@@ -141,7 +147,7 @@ export class UsersService {
       if (verification?.user) {
         verification.user.verified = true;
         await this.users.save(verification.user);
-        // await this.verificationService.delete(verification.id);
+        await this.verificationService.delete(verification.id);
         await this.mailService.sendVerificationEmail(
           verification.user.email,
           code,
@@ -156,6 +162,7 @@ export class UsersService {
         };
       }
     } catch (error) {
+      console.log(error);
       return {
         ok: false,
         error: '검증할 수 없습니다.',
