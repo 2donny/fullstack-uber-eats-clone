@@ -3,3 +3,8 @@ export class MailModuleOptions {
   domain: string;
   fromEmail: string;
 }
+
+export class EmailVar {
+  key: string;
+  value: string;
+}
