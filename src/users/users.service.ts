@@ -130,7 +130,8 @@ export class UsersService {
       return {
         ok: true,
       };
-    } catch {
+    } catch (error) {
+      console.log(error);
       return {
         ok: false,
         error: '프로필 편집 실패했습니다.',

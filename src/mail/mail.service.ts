@@ -32,7 +32,7 @@ export class MailService {
 
     try {
       mg.messages().send(data, function (error, body) {
-        console.log(body, error);
+        console.log(body);
       });
     } catch (error) {
       console.log(error);

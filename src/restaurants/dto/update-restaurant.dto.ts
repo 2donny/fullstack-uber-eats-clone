@@ -9,15 +9,15 @@ import {
 import { Restaurant } from '../entities/restaurant.entity';
 
 @InputType()
-class updateRestaurantInputType extends PartialType(
+class UpdateRestaurantInputType extends PartialType(
   OmitType(Restaurant, ['id']),
 ) {}
 
 @ArgsType()
-export class updateRestaurantDto {
+export class UpdateRestaurantInput {
   @Field(() => Int)
   id: number;
 
-  @Field(() => updateRestaurantInputType)
-  data: updateRestaurantInputType;
+  @Field(() => UpdateRestaurantInputType)
+  data: UpdateRestaurantInputType;
 }
