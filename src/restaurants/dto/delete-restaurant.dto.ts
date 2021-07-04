@@ -1,4 +1,4 @@
-import { ArgsType, Field, InputType, ObjectType } from '@nestjs/graphql';
+import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
 import { IsNumber } from 'class-validator';
 import { CoreOutput } from 'src/common/dtos/output.dto';
 

@@ -1,4 +1,3 @@
-import { User } from 'src/users/entities/user.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { Category } from '../entities/category.entity';
 
