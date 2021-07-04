@@ -15,20 +15,29 @@ import {
   EditRestaurantInput,
   EditRestaurantOutput,
 } from './dto/edit-restaurant.dto';
+import { RestaurantsInput, RestaurantsOutput } from './dto/restaurants.dto';
 import { Category } from './entities/category.entity';
 import { Restaurant } from './entities/restaurant.entity';
 import { CategoryRepository } from './repositories/category.repository';
 import { RestaurantRepository } from './repositories/restaurant.repository';
+import { RestaurantInput, RestaurantOutput } from './dto/restaurant.dto';
+import {
+  SearchRestaurantInput,
+  SearchRestaurantOutput,
+} from './dto/search-restaurant.dto';
+import { Raw, Repository } from 'typeorm';
+import { CreateDishInput, CreateDishOutput } from './dto/create-dish.dto';
+import { Dish } from './entities/dish.entity';
 
 const NUMBER_PER_PAGE = 5;
 
 @Injectable()
 export class RestaurantsService {
   constructor(
-    @InjectRepository(Restaurant)
     private readonly restaurants: RestaurantRepository,
-    @InjectRepository(Category)
     private readonly categories: CategoryRepository,
+    @InjectRepository(Dish)
+    private readonly dishes: Repository<Dish>,
   ) {}
 
   public async createRestaurant(
@@ -62,7 +71,7 @@ export class RestaurantsService {
     editRestaurantInput: EditRestaurantInput,
   ): Promise<EditRestaurantOutput> {
     try {
-      const hashError = await this.restaurants.checkExeception(
+      const hashError = await this.restaurants.checkRestaurantExeception(
         editRestaurantInput.restaurantId,
         owner.id,
       );
@@ -95,7 +104,7 @@ export class RestaurantsService {
     { restaurantId }: DeleteRestaurantInput,
   ): Promise<DeleteRestaurantOutput> {
     try {
-      const hasError = await this.restaurants.checkExeception(
+      const hasError = await this.restaurants.checkRestaurantExeception(
         restaurantId,
         owner.id,
       );
@@ -144,6 +153,7 @@ export class RestaurantsService {
           error: '카테고리가 존재하지 않습니다.',
         };
       }
+
       const restaurants = await this.restaurants.find({
         where: {
           category,
@@ -153,16 +163,133 @@ export class RestaurantsService {
       });
 
       const totalRestaurants = await this.restaurantCount(category);
-      category.restaurants = restaurants;
       return {
         ok: true,
         category,
+        restaurants,
         totalPages: Math.ceil(totalRestaurants / NUMBER_PER_PAGE),
       };
     } catch {
       return {
         ok: false,
         error: '카테고리를 불러올 수 없습니다.',
+      };
+    }
+  }
+
+  public async seeAllRestaurants({
+    page,
+  }: RestaurantsInput): Promise<RestaurantsOutput> {
+    try {
+      const [restaurants, totalItems] =
+        await this.restaurants.findAndCountWithPagination(page);
+      return {
+        ok: true,
+        results: restaurants,
+        totalPages: Math.ceil(totalItems / 10),
+        totalItems,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: '레스토랑을 불러올 수 없습니다.',
+      };
+    }
+  }
+
+  public async findRestaurantById({
+    restaurantId,
+  }: RestaurantInput): Promise<RestaurantOutput> {
+    try {
+      const restaurant = await this.restaurants.findOne(
+        { id: restaurantId },
+        { relations: ['menu'] },
+      );
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: '레스토랑이 존재하지 않습니다.',
+        };
+      }
+      return {
+        ok: true,
+        restaurant,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: '레스토랑 로딩을 실패했습니다.',
+      };
+    }
+  }
+
+  public async searchRestaurantByName({
+    query,
+    page,
+  }: SearchRestaurantInput): Promise<SearchRestaurantOutput> {
+    try {
+      const [restaurants, totalItems] =
+        await this.restaurants.findAndCountWithPagination(page, {
+          where: {
+            name: Raw((name) => `${name} ILIKE '%${query}%'`),
+          },
+        });
+
+      if (!restaurants) {
+        return {
+          ok: false,
+          error: '해당 레스토랑이 존재하지 않습니다.',
+        };
+      }
+
+      return {
+        ok: true,
+        restaurants,
+        totalPages: Math.ceil(totalItems / 10),
+        totalItems,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: '레스토랑을 찾을 수 없습니다.',
+      };
+    }
+  }
+
+  public async createDish(
+    owner: User,
+    createDishInput: CreateDishInput,
+  ): Promise<CreateDishOutput> {
+    try {
+      const hasError = await this.restaurants.checkRestaurantExeception(
+        createDishInput.restaurantId,
+        owner.id,
+      );
+      if (hasError) return hasError;
+
+      const restaurant = await this.restaurants.findOne({
+        id: createDishInput.restaurantId,
+      });
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: '존재하지 않는 레스토랑입니다.',
+        };
+      }
+
+      const dish = await this.dishes.create({
+        ...createDishInput,
+        restaurant,
+      });
+      await this.dishes.save(dish);
+
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: '요리를 생성하는 데 실패했습니다.',
       };
     }
   }
