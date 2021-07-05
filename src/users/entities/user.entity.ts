@@ -1,3 +1,4 @@
+import { Order } from 'src/orders/entities/order.entity';
 import {
   Field,
   InputType,
@@ -43,13 +44,21 @@ export class User extends CoreEntity {
   @IsEnum(UserRole)
   role: UserRole;
 
+  @Field(() => Boolean)
+  @Column({ default: false })
+  verified: boolean;
+
   @Field(() => [Restaurant])
   @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
   restaurants: Restaurant[];
 
-  @Field(() => Boolean)
-  @Column({ default: false })
-  verified: boolean;
+  @Field(() => [Order])
+  @OneToMany(() => Order, (order: Order) => order.customer)
+  orders: Order[];
+
+  @Field(() => [Order])
+  @OneToMany(() => Order, (order: Order) => order.customer)
+  rides: Order[];
 
   @BeforeInsert()
   @BeforeUpdate()
