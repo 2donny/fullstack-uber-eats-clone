@@ -4,14 +4,23 @@ import { CoreEntity } from 'src/common/entities/core.entity';
 import { IsString, IsNumber, Length } from 'class-validator';
 import { Restaurant } from './restaurant.entity';
 
-@InputType('DishInputType', { isAbstract: true })
+@InputType('DishChoiceInputType', { isAbstract: true })
+@ObjectType()
+export class DishChoice {
+  @Field(() => String)
+  name: string;
+  @Field(() => Int, { nullable: true })
+  extra?: number;
+}
+
+@InputType('DishOptionsInputType', { isAbstract: true })
 @ObjectType()
 export class DishOptions {
   @Field(() => String)
   name: string;
 
-  @Field(() => [String], { nullable: true })
-  choices?: string[];
+  @Field(() => [DishChoice], { nullable: true })
+  choices?: DishChoice[];
 
   @Field(() => Int, { nullable: true })
   extra?: number;
