@@ -41,7 +41,6 @@ The Backend of Uber eats clone
 
 - [ ] Payments (paddle)
 
-
 ## TIL
 
 06/15
@@ -142,7 +141,7 @@ export class UserRepository extends Repository<User> {
 
 ### (1) - MetaData
 
-NestJs의 ```@SetMetadata()```를 이용하여 Resolver에 ```custom metadata```를 붙인다.
+NestJs의 `@SetMetadata()`를 이용하여 Resolver에 `custom metadata`를 붙인다.
 
 <br />
 
@@ -151,14 +150,13 @@ export type allowedRoles = keyof typeof UserRole | 'Any';
 
 export const Roles = (roles: allowedRoles[]) => SetMetadata('roles', roles);
 ```
-위 함수는 요청 주체인 User의 ```role```에 대한 custom metadata를 리턴하는 함수이다.
 
+위 함수는 요청 주체인 User의 `role`에 대한 custom metadata를 리턴하는 함수이다.
 
 <br />
 
 ```typescript
 class RestaurantResolver {
-
   @Mutation(() => EditRestaurantOutput)
   @Roles(['Owner'])
   public async editRestaurant(
@@ -167,12 +165,11 @@ class RestaurantResolver {
   ): Promise<EditRestaurantOutput> {
     return this.restaurantService.editRestaurant(owner, editRestaurantInput);
   }
-  
 }
 ```
-위 예시를 보면 Resolver에 ```roles metadata```를 붙인다.
-roles metadata's value는 ```Guard``` 안에서 ```reflector```를 통해 read된다. 
 
+위 예시를 보면 Resolver에 `roles metadata`를 붙인다.
+roles metadata's value는 `Guard` 안에서 `reflector`를 통해 read된다.
 
 <br />
 
@@ -193,6 +190,13 @@ export class AuthGuard implements CanActivate {
 }
 ```
 
-일련의  flow는 다음과 같다.
+일련의 flow는 다음과 같다.
 
-유저가 ```Request``` 보냄 -> ```AuthGuard```가 요청을 판별 (해당 리졸버로부터 읽은 metadata value를 통해 권한 없는 요청은 막는다) -> ```Resolver```에서 response를 리턴.
+유저가 `Request` 보냄 -> `AuthGuard`가 요청을 판별 (해당 리졸버로부터 읽은 metadata value를 통해 권한 없는 요청은 막는다) -> `Resolver`에서 response를 리턴.
+
+07/05 - TIL
+
+- OrderItem entity를 추가한 이유
+  `createOrder` 리졸버에서 creteOrderInput을 들여다보면 `restaurantId`, `dishes` 2개의 인자를 받는다. 근데 dishes는 DishInputType인데 이것은 ```name, photo, price description, options, restaurant``` 전부 required로 받아야한다. 근데 주문을 하는 고객 입장에서 음식의 description, restaurant, price, photo를 줄 필요는 없다. restaurantId, items(options)만 추가하고 싶기 때문에 별도의 OrderItem entity를 만든다. 
+  - 근데 의문점은 왜 entity인가? 그냥 TypeScript class만 만들어서 써도 되지 않을까?
+
