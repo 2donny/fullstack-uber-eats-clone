@@ -1,33 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
-import { AllCategoriesOutput } from './dto/all-categories.dto';
-import { CategoryInput, CategoryOutput } from './dto/category.dto';
+import { SeeCategories } from './dto/category/see-categories.dto';
+import { CategoryInput, CategoryOutput } from './dto/category/see-category.dto';
 import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
-} from './dto/create-restaurant.dto';
+} from './dto/restaurant/create-restaurant.dto';
 import {
   DeleteRestaurantInput,
   DeleteRestaurantOutput,
-} from './dto/delete-restaurant.dto';
+} from './dto/restaurant/delete-restaurant.dto';
 import {
   EditRestaurantInput,
   EditRestaurantOutput,
-} from './dto/edit-restaurant.dto';
-import { RestaurantsInput, RestaurantsOutput } from './dto/restaurants.dto';
+} from './dto/restaurant/edit-restaurant.dto';
+import {
+  RestaurantsInput,
+  RestaurantsOutput,
+} from './dto/restaurant/restaurants.dto';
 import { Category } from './entities/category.entity';
-import { Restaurant } from './entities/restaurant.entity';
 import { CategoryRepository } from './repositories/category.repository';
 import { RestaurantRepository } from './repositories/restaurant.repository';
-import { RestaurantInput, RestaurantOutput } from './dto/restaurant.dto';
+import {
+  RestaurantInput,
+  RestaurantOutput,
+} from './dto/restaurant/restaurant.dto';
 import {
   SearchRestaurantInput,
   SearchRestaurantOutput,
-} from './dto/search-restaurant.dto';
+} from './dto/restaurant/search-restaurant.dto';
 import { Raw, Repository } from 'typeorm';
-import { CreateDishInput, CreateDishOutput } from './dto/create-dish.dto';
+import { CreateDishInput, CreateDishOutput } from './dto/dish/create-dish.dto';
 import { Dish } from './entities/dish.entity';
+import { EditDishOutput, EditDishInput } from './dto/dish/edit-dish.dto';
+import { DishRepository } from './repositories/dish.repository';
+import { DeleteDishOutput, DeleteDishInput } from './dto/dish/delete-dish.dto';
 
 const NUMBER_PER_PAGE = 5;
 
@@ -36,8 +44,7 @@ export class RestaurantsService {
   constructor(
     private readonly restaurants: RestaurantRepository,
     private readonly categories: CategoryRepository,
-    @InjectRepository(Dish)
-    private readonly dishes: Repository<Dish>,
+    private readonly dishes: DishRepository,
   ) {}
 
   public async createRestaurant(
@@ -122,7 +129,7 @@ export class RestaurantsService {
     }
   }
 
-  public async allCategories(): Promise<AllCategoriesOutput> {
+  public async SeeCategories(): Promise<SeeCategories> {
     try {
       const categories = await this.categories.find();
       return {
@@ -290,6 +297,56 @@ export class RestaurantsService {
       return {
         ok: false,
         error: '요리를 생성하는 데 실패했습니다.',
+      };
+    }
+  }
+
+  public async editDish(
+    owner: User,
+    editDishInput: EditDishInput,
+  ): Promise<EditDishOutput> {
+    try {
+      const hasError = await this.dishes.checkDishException(
+        owner.id,
+        editDishInput.id,
+      );
+
+      if (hasError) return hasError;
+
+      await this.dishes.update(editDishInput.id, {
+        ...editDishInput,
+      });
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: '음식 정보 수정에 실패했습니다.',
+      };
+    }
+  }
+
+  public async deleteDish(
+    owner: User,
+    deleteDishInput: DeleteDishInput,
+  ): Promise<DeleteDishOutput> {
+    try {
+      const hasError = await this.dishes.checkDishException(
+        owner.id,
+        deleteDishInput.dishId,
+      );
+
+      if (hasError) return hasError;
+
+      await this.dishes.delete(deleteDishInput.dishId);
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: '음식 삭제에 실패했습니다.',
       };
     }
   }
