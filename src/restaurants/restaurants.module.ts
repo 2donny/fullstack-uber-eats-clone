@@ -1,3 +1,4 @@
+import { DishRepository } from './repositories/dish.repository';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryRepository } from './repositories/category.repository';
@@ -8,11 +9,14 @@ import {
   DishResolver,
 } from './restaurants.resolver';
 import { RestaurantsService } from './restaurants.service';
-import { Dish } from './entities/dish.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RestaurantRepository, CategoryRepository, Dish]),
+    TypeOrmModule.forFeature([
+      RestaurantRepository,
+      CategoryRepository,
+      DishRepository,
+    ]),
   ],
   providers: [
     RestaurantsResolver,

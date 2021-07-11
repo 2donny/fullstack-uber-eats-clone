@@ -14,14 +14,14 @@ export class RestaurantRepository extends Repository<Restaurant> {
     if (!restaurant) {
       return {
         ok: false,
-        error: '레스토랑이 존재하지 않습니다.',
+        error: '식당이 존재하지 않습니다.',
       };
     }
 
     if (restaurant.ownerId !== ownerId) {
       return {
         ok: false,
-        error: '자신의 레스토랑이 아닙니다.',
+        error: '나의 식당이 아닙니다 (권한 없음)',
       };
     }
   }

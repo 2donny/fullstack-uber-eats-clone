@@ -9,13 +9,14 @@ import { Restaurant } from './restaurant.entity';
 export class DishChoice {
   @Field(() => String)
   name: string;
+
   @Field(() => Int, { nullable: true })
   extra?: number;
 }
 
-@InputType('DishOptionsInputType', { isAbstract: true })
+@InputType('DishOptionInputType', { isAbstract: true })
 @ObjectType()
-export class DishOptions {
+export class DishOption {
   @Field(() => String)
   name: string;
 
@@ -50,9 +51,9 @@ export class Dish extends CoreEntity {
   @Length(5, 120)
   description: string;
 
-  @Field(() => [DishOptions], { nullable: true })
+  @Field(() => [DishOption], { nullable: true })
   @Column({ type: 'json', nullable: true })
-  options?: DishOptions[];
+  options?: DishOption[];
 
   @Field(() => [Restaurant])
   @ManyToOne(() => Restaurant, (restaurant: Restaurant) => restaurant.menu, {

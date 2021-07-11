@@ -1,3 +1,4 @@
+import { EditDishOutput, EditDishInput } from './dto/dish/edit-dish.dto';
 import {
   Args,
   Int,
@@ -10,31 +11,38 @@ import {
 import { AuthUser } from 'src/auth/auth-user.decorator';
 import { Roles } from 'src/auth/role.decorator';
 import { User } from 'src/users/entities/user.entity';
-import { SeeCategories } from './dto/see-categories.dto';
-import { CategoryInput, CategoryOutput } from './dto/see-category.dto';
+import { SeeCategories } from './dto/category/see-categories.dto';
+import { CategoryInput, CategoryOutput } from './dto/category/see-category.dto';
 import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
-} from './dto/create-restaurant.dto';
+} from './dto/restaurant/create-restaurant.dto';
 import {
   DeleteRestaurantInput,
   DeleteRestaurantOutput,
-} from './dto/delete-restaurant.dto';
+} from './dto/restaurant/delete-restaurant.dto';
 import {
   EditRestaurantInput,
   EditRestaurantOutput,
-} from './dto/edit-restaurant.dto';
-import { RestaurantsOutput, RestaurantsInput } from './dto/restaurants.dto';
+} from './dto/restaurant/edit-restaurant.dto';
+import {
+  RestaurantsOutput,
+  RestaurantsInput,
+} from './dto/restaurant/restaurants.dto';
 import { Category } from './entities/category.entity';
 import { Restaurant } from './entities/restaurant.entity';
 import { RestaurantsService } from './restaurants.service';
-import { RestaurantInput, RestaurantOutput } from './dto/restaurant.dto';
+import {
+  RestaurantInput,
+  RestaurantOutput,
+} from './dto/restaurant/restaurant.dto';
 import {
   SearchRestaurantOutput,
   SearchRestaurantInput,
-} from './dto/search-restaurant.dto';
+} from './dto/restaurant/search-restaurant.dto';
 import { Dish } from './entities/dish.entity';
-import { CreateDishInput, CreateDishOutput } from './dto/create-dish.dto';
+import { CreateDishInput, CreateDishOutput } from './dto/dish/create-dish.dto';
+import { DeleteDishInput, DeleteDishOutput } from './dto/dish/delete-dish.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantsResolver {
@@ -122,5 +130,23 @@ export class DishResolver {
     @Args('input') createDishInput: CreateDishInput,
   ): Promise<CreateDishOutput> {
     return this.restaurantService.createDish(owner, createDishInput);
+  }
+
+  @Mutation(() => EditDishOutput)
+  @Roles(['Owner'])
+  public async editDish(
+    @AuthUser() owner: User,
+    @Args('input') editDishInput: EditDishInput,
+  ): Promise<EditDishOutput> {
+    return this.restaurantService.editDish(owner, editDishInput);
+  }
+
+  @Mutation(() => EditDishOutput)
+  @Roles(['Owner'])
+  public async deleteDish(
+    @AuthUser() owner: User,
+    @Args('input') deleteDishInput: DeleteDishInput,
+  ): Promise<DeleteDishOutput> {
+    return this.restaurantService.deleteDish(owner, deleteDishInput);
   }
 }
