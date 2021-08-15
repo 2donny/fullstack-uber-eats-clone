@@ -1,5 +1,5 @@
 import { Dish } from 'src/restaurants/entities/dish.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User, UserRole } from 'src/users/entities/user.entity';
 import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { RestaurantRepository } from 'src/restaurants/repositories/restaurant.repository';
 import { OrderItem } from './entities/order-item.entity';
+import { GetOrdersOutput, GetOrdersInput } from './dtos/get-orders.dto';
 
 @Injectable()
 export class OrderService {
@@ -102,6 +103,55 @@ export class OrderService {
       return {
         ok: true,
       };
+    } catch (error) {
+      console.log(error);
+      return {
+        ok: false,
+        error,
+      };
+    }
+  }
+
+  public async getOrders(
+    authUser: User,
+    { status }: GetOrdersInput,
+  ): Promise<GetOrdersOutput> {
+    try {
+      if (authUser.role === UserRole.Client) {
+        const orders = await this.orders.find({
+          where: {
+            status,
+            customer: authUser,
+          },
+          relations: ['items'],
+        });
+        return {
+          ok: true,
+          orders,
+        };
+      } else if (authUser.role === UserRole.Delivery) {
+        const orders = await this.orders.find({
+          where: {
+            driver: authUser,
+            status,
+          },
+        });
+        return {
+          ok: true,
+          orders,
+        };
+      } else if (authUser.role === UserRole.Owner) {
+        const orders = await this.restaurants.find({
+          where: {
+            id: authUser.id,
+          },
+          relations: ['orders'],
+        });
+        console.log(orders);
+        return {
+          ok: true,
+        };
+      }
     } catch (error) {
       console.log(error);
       return {
